@@ -2,11 +2,12 @@ from pathlib import Path
 import os
 import shutil
 import signal
+from typing import Union
 
 
 class WorkDirContext:
-    def __init__(self, path: Path):
-        self.path = path
+    def __init__(self, path: Union[Path, str]):
+        self.path = Path(path)
         self.origin = Path(os.getcwd()).absolute()
 
     def __enter__(self):

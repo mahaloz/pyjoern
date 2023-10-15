@@ -4,9 +4,9 @@ import os
 import logging
 
 from cpgqls_client import CPGQLSClient
-from .client import JoernClient
-
 import psutil
+
+from . import JOERN_SERVER_PATH
 
 l = logging.getLogger(__name__)
 
@@ -30,17 +30,17 @@ class JoernServer:
         if joern_proc:
             joern_proc.kill()
 
-        proc = subprocess.Popen([f'joern --server --server-port {self.port} >> /tmp/t.tmp 2>&1 &'], shell=True)
+        subprocess.Popen([f'{JOERN_SERVER_PATH} --server --server-port {self.port} >> /tmp/t.tmp 2>&1 &'], shell=True)
         return True
 
-    def wait_for_server_start(self, timeout=20):
+    def wait_for_server_start(self, timeout=30):
         start_time = time()
         success = False
         while time() - start_time < timeout:
             if self._find_joern_proc():
                 try:
                     CPGQLSClient(f"{self.ip}:{self.port}").execute("val a = 1")
-                except ConnectionRefusedError:
+                except (ConnectionRefusedError, OSError):
                     pass
                 else:
                     success = True
@@ -50,6 +50,8 @@ class JoernServer:
 
         if not success:
             l.critical(f"Was unable to start the JOERN server on port {self.port} before timeout...")
+        else:
+            sleep(0.5)
 
     def stop(self):
         joern_proc = self._find_joern_proc()

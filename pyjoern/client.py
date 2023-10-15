@@ -4,7 +4,6 @@ from typing import Set
 
 from cpgqls_client import CPGQLSClient, import_code_query
 import networkx as nx
-import pygraphviz as pg
 
 l = logging.getLogger(__name__)
 
