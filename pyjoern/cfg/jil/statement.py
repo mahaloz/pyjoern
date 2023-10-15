@@ -1,5 +1,6 @@
+#
 # JIL:
-# JOERN Intermediate Language
+# Joern Intermediate Language
 #
 
 from copy import deepcopy

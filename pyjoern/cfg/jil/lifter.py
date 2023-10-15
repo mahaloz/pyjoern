@@ -36,8 +36,9 @@ def lift_graph(graph: nx.DiGraph):
     for (in_node, out_node) in graph.edges:
         edges_by_node_addr[in_node].append(out_node)
 
+    addr_uses = defaultdict(int)
     new_blocks = {
-        node: lift_block(node, graph) for node in graph.nodes
+        node: lift_block(node, graph, addr_dict=addr_uses) for node in graph.nodes
     }
 
     for node_name, new_node in new_blocks.items():
@@ -48,10 +49,13 @@ def lift_graph(graph: nx.DiGraph):
     return lifted_graph
 
 
-def lift_block(node, graph):
+def lift_block(node, graph, addr_dict=None):
     node_data = graph._node[node].get('label', None)
     if not node_data:
-        return Block(0 - int(node, 10), statements=[Nop("", Nop.NOP)])
+        new_addr = 0 - int(node, 10)
+        new_idx = addr_dict[new_addr]
+        addr_dict[new_addr] += 1
+        return Block(0 - int(node, 10), statements=[Nop("", Nop.NOP)], idx=new_idx)
 
     statements = []
     for raw_stmt in node_data.split("\n"):
@@ -63,7 +67,10 @@ def lift_block(node, graph):
 
         statements.append(lifted_stmt)
 
-    return Block(statements[0].source_line_number, statements=statements)
+    new_addr = statements[0].source_line_number
+    new_idx = addr_dict[new_addr]
+    addr_dict[new_addr] += 1
+    return Block(new_addr, statements=statements, idx=new_idx)
 
 
 def lift_statement(raw_data: str):
