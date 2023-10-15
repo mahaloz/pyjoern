@@ -22,7 +22,7 @@ The IL the source is lifted to is described in [JIL](./pyjoern/cfg/jil/statement
 ```python 
 from pyjoern import fast_cfgs_from_source
 
-cfgs = out = fast_cfgs_from_source("tests/source/simple.c")
+cfgs = fast_cfgs_from_source("tests/source/simple.c")
 main_func = cfgs["main"]
 print(main_func.edges)
 ```
