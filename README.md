@@ -28,8 +28,8 @@ print(main_func.edges)
 ```
 
 ## Versioning
-The current version of PyJoern can be found in [./pyjoern/__init__.py] as `__version__`.
-The point in the version is the PyJoern specific updates. 
+The current version of PyJoern can be found in [pyjoern/__init__.py](./pyjoern/__init__.py) as `__version__`.
+The last decimal point in the version is the PyJoern-specific update. 
 The first three are the current version of Joern that PyJoern is supporting. 
 
 For instance:
@@ -37,4 +37,4 @@ For instance:
 __version__ = "v1.2.18.1"
 ```
 
-Would mean Joern version `v1.2.18`, with PyJoern update `1`. 
+This would mean Joern version `v1.2.18`, with PyJoern update `1`. 
