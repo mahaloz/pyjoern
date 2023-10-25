@@ -2,10 +2,11 @@ __version__ = "1.2.18.1"
 
 from pathlib import Path
 import logging
+import importlib.resources
 
 _l = logging.getLogger(__name__)
 
-JOERN_BIN_DIR_PATH = Path(Path(__file__).parent / "bin" / "joern-cli").absolute()
+JOERN_BIN_DIR_PATH = Path(Path(importlib.resources.files("pyjoern")) / "bin/joern-cli").absolute()
 JOERN_SERVER_PATH = JOERN_BIN_DIR_PATH / "joern"
 JOERN_EXPORT_PATH = JOERN_BIN_DIR_PATH / "joern-export"
 JOERN_PARSE_PATH = JOERN_BIN_DIR_PATH / "joern-parse"

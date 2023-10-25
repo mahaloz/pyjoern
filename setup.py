@@ -7,6 +7,7 @@ from distutils.util import get_platform
 from distutils.command.build import build as st_build
 from subprocess import run
 import hashlib
+import importlib.resources
 
 from setuptools import setup
 from setuptools.command.develop import develop as st_develop
@@ -45,7 +46,7 @@ def _download_joern_zipfile(save_location: Path) -> Path:
 
 
 def _download_joern():
-    joern_bin_dir = Path("pyjoern/bin/").absolute()
+    joern_bin_dir = Path(importlib.resources.files("pyjoern")).joinpath("bin").absolute()
     joern_binary = joern_bin_dir / "joern-cli" / "joern"
     if joern_binary.exists():
         return
