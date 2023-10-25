@@ -14,7 +14,7 @@ from setuptools.command.develop import develop as st_develop
 # must update both of these on supported Joern backend update
 JOERN_VERSION = "v1.2.18"
 JOERN_ZIP_HASH = "58ef92c407d6ec4af02b1185bd481562"
-
+FILE_LOCATION = Path(__file__).parent.absolute()
 
 def _download_joern_zipfile(save_location: Path) -> Path:
     # XXX: hacked code for non-ssl verification
@@ -45,7 +45,8 @@ def _download_joern_zipfile(save_location: Path) -> Path:
 
 
 def _download_joern():
-    joern_bin_dir = Path("pyjoern/bin/").absolute()
+    joern_bin_dir = FILE_LOCATION / "pyjoern/bin/"
+    #joern_bin_dir = Path("pyjoern/bin/").absolute()
     joern_binary = joern_bin_dir / "joern-cli" / "joern"
     if joern_binary.exists():
         return
