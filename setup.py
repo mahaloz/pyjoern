@@ -18,7 +18,7 @@ def _download_joern_zipfile(save_location: Path) -> Path:
     import ssl
     ssl._create_default_https_context = ssl._create_unverified_context
 
-    url = f"https://github.com/joernio/joern/releases/dow12nload/{JOERN_VERSION}/joern-cli.zip"
+    url = f"https://github.com/joernio/joern/releases/download/{JOERN_VERSION}/joern-cli.zip"
     with urllib.request.urlopen(url) as response:
         if response.status != 200:
             raise Exception(f"HTTP error {response.status}: {response.reason}")
