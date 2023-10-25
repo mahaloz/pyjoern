@@ -14,7 +14,11 @@ JOERN_VERSION = "v1.2.18"
 
 
 def _download_joern_zipfile(save_location: Path) -> Path:
-    url = f"https://github.com/joernio/joern/releases/download/{JOERN_VERSION}/joern-cli.zip"
+    # XXX: hacked code for non-ssl verification
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
+
+    url = f"https://github.com/joernio/joern/releases/dow12nload/{JOERN_VERSION}/joern-cli.zip"
     with urllib.request.urlopen(url) as response:
         if response.status != 200:
             raise Exception(f"HTTP error {response.status}: {response.reason}")
@@ -31,7 +35,7 @@ def _download_joern_zipfile(save_location: Path) -> Path:
 
 def _download_joern():
     joern_bin_dir = Path("pyjoern/joern/bin/").absolute()
-    joern_binary = joern_bin_dir / "joern"
+    joern_binary = joern_bin_dir / "joern-cli" / "joern"
     if joern_binary.exists():
         return
 
@@ -41,6 +45,9 @@ def _download_joern():
     run(["unzip", str(joern_zip_file)], cwd=str(joern_bin_dir))
     # remove zip file
     joern_zip_file.unlink()
+
+    if not joern_binary.exists():
+        raise Exception("Failed to download Joern!")
 
 
 class build(st_build):
