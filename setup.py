@@ -6,11 +6,14 @@ import sys
 from distutils.util import get_platform
 from distutils.command.build import build as st_build
 from subprocess import run
+import hashlib
 
 from setuptools import setup
 from setuptools.command.develop import develop as st_develop
 
+# must update both of these on supported Joern backend update
 JOERN_VERSION = "v1.2.18"
+JOERN_ZIP_HASH = "58ef92c407d6ec4af02b1185bd481562"
 
 
 def _download_joern_zipfile(save_location: Path) -> Path:
@@ -23,18 +26,26 @@ def _download_joern_zipfile(save_location: Path) -> Path:
         if response.status != 200:
             raise Exception(f"HTTP error {response.status}: {response.reason}")
 
+        hasher = hashlib.md5()
         with open(save_location, 'wb') as f:
             while True:
                 chunk = response.read(8192)
+                hasher.update(chunk)
                 if not chunk:
                     break
+
                 f.write(chunk)
+
+        # hash for extra security
+        download_hash = hasher.hexdigest()
+        if download_hash != JOERN_ZIP_HASH:
+            raise Exception(f"Joern files corrupted in download: {download_hash} != {JOERN_ZIP_HASH}")
 
     return save_location
 
 
 def _download_joern():
-    joern_bin_dir = Path("pyjoern/joern/bin/").absolute()
+    joern_bin_dir = Path("pyjoern/bin/").absolute()
     joern_binary = joern_bin_dir / "joern-cli" / "joern"
     if joern_binary.exists():
         return
