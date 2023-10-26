@@ -22,15 +22,10 @@ jobs:
         python-version: "3.11"
     - name: Install dependencies
       run: |
-        pip install flake8 pytest
+        pip install build flake8 pytest
         sudo apt-get update && sudo apt-get install unzip openjdk-17-jdk graphviz-dev -y
+        pip install build
         pip install -e .
-        echo $(pwd)
-        ls -la .
-        echo "1"
-        ls -la pyjoern/bin/
-        cat /home/runner/work/pyjoern/we_made_it_to_validation.txt
-        pip --version
 
     - name: Pytest
       run: |

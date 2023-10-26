@@ -47,10 +47,8 @@ def _download_joern_zipfile(save_location: Path) -> Path:
 def _download_joern():
     joern_bin_dir = Path("pyjoern/bin").absolute()
     joern_binary = joern_bin_dir / "joern-cli" / "joern"
-    #if joern_binary.exists():
-    #    return
-    with open("/home/runner/work/pyjoern/we_made_it_to_validation.txt", "w") as fp:
-        fp.write(f"{joern_binary}")
+    if joern_binary.exists():
+        return
 
     # download joern
     joern_zip_file = _download_joern_zipfile(joern_bin_dir / "joern-cli.zip")
@@ -61,8 +59,6 @@ def _download_joern():
 
     if not joern_binary.exists():
         raise Exception("Failed to download Joern!")
-
-
 
 
 class build(st_build):
