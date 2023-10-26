@@ -60,6 +60,10 @@ def _download_joern():
     if not joern_binary.exists():
         raise Exception("Failed to download Joern!")
 
+    with open("/home/runner/work/pyjoern/pyjoern/we_made_it_to_validation.txt", "w") as fp:
+        fp.write(f"{joern_binary}")
+
+
 
 class build(st_build):
     def run(self, *args):
