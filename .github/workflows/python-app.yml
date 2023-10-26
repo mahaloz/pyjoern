@@ -30,7 +30,7 @@ jobs:
         ls -la .
         echo "1"
         ls -la pyjoern/bin/
-        cat /home/runner/work/pyjoern/pyjoern/we_made_it_to_validation.txt
+        cat /home/runner/work/pyjoern/we_made_it_to_validation.txt
 
     - name: Pytest
       run: |
