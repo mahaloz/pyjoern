@@ -33,6 +33,6 @@ jobs:
         pip install -e . && pyjoern --install
     - name: Pytest
       run: |
-        export JAVA_OPTS="-Djdk.lang.Process.launchMechanism=vfork"
-        java --version
+        # a hack to allow for docker containers in github actions and ARM
+        export JAVA_OPTS="-Djdk.lang.Process.launchMechanism=vfork" 
         pytest ./tests/tests.py
