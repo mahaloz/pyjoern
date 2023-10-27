@@ -29,4 +29,5 @@ jobs:
 
     - name: Pytest
       run: |
+        export JAVA_OPTS="-Djdk.lang.Process.launchMechanism=vfork"
         pytest ./tests/tests.py
