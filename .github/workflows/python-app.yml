@@ -24,8 +24,9 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install flake8 pytest
-        sudo apt-get update && sudo apt-get install unzip openjdk-19-jdk graphviz-dev -y
+        sudo apt-get update && sudo apt-get install unzip openjdk-19-jdk gradle graphviz-dev -y
         pip install -e . && pyjoern --install
+        java --version
 
     - name: Pytest
       run: |
