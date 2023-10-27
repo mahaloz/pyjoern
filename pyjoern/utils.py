@@ -42,3 +42,4 @@ class timeout:
 
     def __exit__(self, type_, value, traceback):
         signal.alarm(0)
+
