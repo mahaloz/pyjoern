@@ -1,6 +1,7 @@
 __version__ = "1.2.18.1"
 
 import hashlib
+import os
 from pathlib import Path
 import importlib.resources
 import subprocess
@@ -72,6 +73,8 @@ def _download_joern():
         return
 
     # download joern
+    if not JOERN_BIN_DIR_PATH.parent.exists():
+        os.mkdir(JOERN_BIN_DIR_PATH.parent)
     joern_zip_file = _download_and_save_joern_zip(JOERN_BIN_DIR_PATH.parent / "joern-cli.zip")
     # unzip joern
     subprocess.run(["unzip", str(joern_zip_file)], cwd=str(JOERN_BIN_DIR_PATH.parent), capture_output=True)
