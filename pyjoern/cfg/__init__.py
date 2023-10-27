@@ -21,13 +21,13 @@ def fast_cfgs_from_source(filepath: Path, lift_cfgs=True, supergraph=True):
         with WorkDirContext(tmpdir):
             # run joern-parser which will output a cpg in the same dir by the
             # filename of "cpg.bin"
-            ret = run(f"{JOERN_PARSE_PATH} {filepath}".split(), capture_output=True)
+            ret = run(f"{JOERN_PARSE_PATH} {filepath}".split(), capture_output=True, timeout=120)
             if ret.returncode != 0:
                 l.warning("Joern parse failed, stopping CFG extraction")
                 return None
 
             # extras the cfgs into out_dir in same directory
-            ret = run(f"{JOERN_EXPORT_PATH} --repr cfg --out out_dir".split(), capture_output=True)
+            ret = run(f"{JOERN_EXPORT_PATH} --repr cfg --out out_dir".split(), capture_output=True, timeout=120)
             if ret.returncode != 0:
                 l.warning("Joern Export failed, stopping CFG extraction")
                 return None
