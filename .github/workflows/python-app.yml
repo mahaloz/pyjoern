@@ -29,4 +29,5 @@ jobs:
 
     - name: Pytest
       run: |
+        pyjoern --help
         pytest ./tests/tests.py
