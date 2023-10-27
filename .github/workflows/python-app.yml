@@ -20,15 +20,19 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: "3.11"
+    - name: Install Java 19
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin' # See 'Supported distributions' for available options
+        java-version: '19'
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install flake8 pytest
-        sudo apt-get update && sudo apt-get install unzip openjdk-19-jdk gradle graphviz-dev -y
+        sudo apt-get update && sudo apt-get install unzip openjdk-19-jdk graphviz-dev -y
         pip install -e . && pyjoern --install
-        java --version
-
     - name: Pytest
       run: |
         export JAVA_OPTS="-Djdk.lang.Process.launchMechanism=vfork"
+        java --version
         pytest ./tests/tests.py
