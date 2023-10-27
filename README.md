@@ -36,4 +36,4 @@ For instance:
 __version__ = "v1.2.18.1"
 ```
 
-Would mean Joern version `v1.2.18`, with PyJoern update `1`. 
+This would mean Joern version `v1.2.18`, with PyJoern update `1`. 
