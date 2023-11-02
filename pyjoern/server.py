@@ -30,7 +30,17 @@ class JoernServer:
         if joern_proc:
             joern_proc.kill()
 
-        subprocess.Popen([f'{JOERN_SERVER_PATH} --server --server-port {self.port} >> /tmp/t.tmp 2>&1 &'], shell=True)
+        # this spawns a child process as well
+        proc = subprocess.Popen(
+            f"{JOERN_SERVER_PATH} --server --server-port {self.port}".split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        sleep(3)
+        if proc.poll() is not None:
+            error_msg = proc.stderr.read().decode("utf-8")
+            raise Exception(f"Unable to start the Joern server on port {self.port} because error: {error_msg}")
+
         return True
 
     def wait_for_server_start(self, timeout=30):
