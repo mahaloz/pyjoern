@@ -2,17 +2,15 @@
 A Python frontend and lifter for Joern API, focused on CFG manipulation. 
 
 ## Install
-The Python frontend depends on two native backends: Java 19 and Graphviz.
-You must have these installed on your machine before pip installing this library.
-To install everything in a working condition, do the following for Ubuntu:
+This package requires you to have **Java 19, Graphviz, and Unzip** installed on your machine before running the
+pip installer. In you don't have them on your system, use the [install_dependencies.sh](./install_dependencies.sh) 
+script found in the source repo.
 
-```bash
-sudo apt-get install -y openjdk-19-jdk graphviz-dev
+```
 pip3 install pyjoern && pyjoern --install
 ```
 
-When you run `pyjoern --install` (which should be in your path after pip install), it wil download the latest Joern binaries and install them 
-inside the Python package.
+Running `pyjoern --install` will init the Joern package for this first time, which will download the backend.
 
 ## Usage
 Use PyJoern as a library for lifting source into a CFG. 
@@ -31,7 +29,7 @@ The current version of PyJoern can be found in [pyjoern/\_\_init\_\_.py] as `__v
 The point in the version is the PyJoern specific updates. 
 The first three are the current version of Joern that PyJoern is supporting. 
 
-For instance:
+Example:
 ```python 
 __version__ = "v1.2.18.1"
 ```
