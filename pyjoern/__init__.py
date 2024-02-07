@@ -1,5 +1,5 @@
 
-__version__ = "1.2.18.5"
+__version__ = "1.2.18.6"
 
 import hashlib
 import os

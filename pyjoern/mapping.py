@@ -95,9 +95,11 @@ def correct_source_cfg_addrs(cfgs: Dict[str, nx.DiGraph], line_map_file: Path):
 
             nodes_map[node] = node_copy
 
-        new_graph.add_nodes_from(nodes_map.values())
+        for node in nodes_map.values():
+            new_graph.add_node(node, node=node)
+
         for src, dst in cfg.edges:
-            new_graph.add_edge(nodes_map[src], nodes_map[dst])
+            new_graph.add_edge(nodes_map[src], nodes_map[dst], src=nodes_map[src], dst=nodes_map[dst])
 
         new_cfgs[cfg_name] = new_graph
 
