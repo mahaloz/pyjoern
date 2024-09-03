@@ -33,7 +33,7 @@ STMT_MAP = {
 def lift_graph(graph: nx.DiGraph):
     lifted_graph = nx.DiGraph()
     edges_by_node_addr: Dict[int, List[int]] = defaultdict(list)
-    for (in_node, out_node) in graph.edges:
+    for in_node, out_node, _ in graph.edges(data=True):
         edges_by_node_addr[in_node].append(out_node)
 
     addr_uses = defaultdict(int)

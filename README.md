@@ -13,12 +13,19 @@ pip3 install pyjoern && pyjoern --install
 Running `pyjoern --install` will init the Joern package for this first time, which will download the backend.
 
 ## Usage
-Use PyJoern as a library for lifting source into a CFG. 
-The IL the source is lifted to is described in [JIL](./pyjoern/cfg/jil/statement.py).
+Use PyJoern as a library for collecting info on source and getting a CFG. 
+The IL the source CFG is lifted to is described in [JIL](./pyjoern/cfg/jil/statement.py).
 
 ```python 
-from pyjoern import fast_cfgs_from_source
+from pyjoern import parse_source, fast_cfgs_from_source
 
+# for full parsing
+functions = parse_source("tests/source/simple.c")
+main = functions["main"]
+print(main.start_line)
+print(main.cfg)
+
+# for only the CFG
 cfgs = fast_cfgs_from_source("tests/source/simple.c")
 main_func = cfgs["main"]
 print(main_func.edges)
