@@ -1,5 +1,4 @@
-__joern_version__ = "v4.0.61"
-__version__ = f"{__joern_version__}.0"
+__version__ = f"v4.0.61.0"
 
 import hashlib
 import os
@@ -8,6 +7,8 @@ import importlib.resources
 import subprocess
 import urllib.request
 import math
+
+from tqdm import tqdm
 
 # initialize logging for the entire project
 import logging
@@ -18,13 +19,13 @@ del Loggers
 
 _l = logging.getLogger(__name__)
 
+JOERN_VERSION = "v4.0.61"
 JOERN_BIN_DIR_PATH = Path(Path(str(importlib.resources.files("pyjoern"))) / "bin/joern-cli").absolute()
 JOERN_SERVER_PATH = JOERN_BIN_DIR_PATH / "joern"
 JOERN_EXPORT_PATH = JOERN_BIN_DIR_PATH / "joern-export"
 JOERN_PARSE_PATH = JOERN_BIN_DIR_PATH / "joern-parse"
 # must update both of these on supported Joern backend update
 JOERN_ZIP_HASH = "fa40c38554d26942abec8dd5de9933d48269ccaa1e0271dfcd134801bfc4bc4f988d6b629f2bacc75a0fecc97a31393cfe46e8effb01692c1a1994ddcffa7cf4"
-
 # must be imported after defining project wide constants
 from .client import JoernClient
 from .server import JoernServer
@@ -39,11 +40,10 @@ from .parsing import parse_source
 def _download_and_save_joern_zip(save_location: Path, verify=True) -> Path:
     # XXX: hacked code for non-ssl verification
     import ssl
-    from tqdm import tqdm
 
     ssl._create_default_https_context = ssl._create_unverified_context
 
-    url = f"https://github.com/joernio/joern/releases/download/{__joern_version__}/joern-cli.zip"
+    url = f"https://github.com/joernio/joern/releases/download/{JOERN_VERSION}/joern-cli.zip"
     with urllib.request.urlopen(url) as response:
         total_size = response.length
         if response.status != 200:
