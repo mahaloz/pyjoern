@@ -24,8 +24,8 @@ JOERN_SERVER_PATH = JOERN_BIN_DIR_PATH / "joern"
 JOERN_EXPORT_PATH = JOERN_BIN_DIR_PATH / "joern-export"
 JOERN_PARSE_PATH = JOERN_BIN_DIR_PATH / "joern-parse"
 # must update both of these on supported Joern backend update
-JOERN_SERVER_VERSION = "v2.0.226"
-JOERN_ZIP_HASH = "74f48b367d2bc86ae98c20eb2a798e2fd543e1ab1d331ee4cb89fc8f2b729ff957d0a6a75493f102c1be243abd338c4b89c4bbba6287d2c45f8a74c3a696eab5"
+JOERN_SERVER_VERSION = "v4.0.61"
+JOERN_ZIP_HASH = "fa40c38554d26942abec8dd5de9933d48269ccaa1e0271dfcd134801bfc4bc4f988d6b629f2bacc75a0fecc97a31393cfe46e8effb01692c1a1994ddcffa7cf4"
 
 # must be imported after defining project wide constants
 from .client import JoernClient
@@ -78,7 +78,7 @@ def _download_joern():
         os.mkdir(JOERN_BIN_DIR_PATH.parent)
     joern_zip_file = _download_and_save_joern_zip(JOERN_BIN_DIR_PATH.parent / "joern-cli.zip", verify=True)
     # unzip joern
-    subprocess.run(["unzip", str(joern_zip_file)], cwd=str(JOERN_BIN_DIR_PATH.parent), capture_output=True)
+    subprocess.run(["unzip", str(joern_zip_file)], cwd=str(JOERN_BIN_DIR_PATH.parent), capture_output=True, check=True)
     # remove zip file
     joern_zip_file.unlink()
 

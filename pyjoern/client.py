@@ -337,7 +337,7 @@ class JoernClient:
 
         out = list(out)
         # return set(self._filter_blacklisted(out))
-        return out
+        return set(out)
 
     @staticmethod
     def _filter_blacklisted(strings):
