@@ -95,7 +95,7 @@ def escapeString(str: String): String = {
         "name" -> func_details.get(function_name).get("name"),
         "fullname" -> func_details.get(function_name).get("fullfuncname"),
         "filename" -> func_details.get(function_name).get("filename"),
-        "func_return_type" -> func_return_type,
+        "return_type" -> func_return_type,
         "macro_count" -> macro_count,
         "start_line" -> func_details.get(function_name).get("start_line"),
         "end_line" -> func_details.get(function_name).get("end_line"),

@@ -1,0 +1,1 @@
+from .fast_parser import parse_source

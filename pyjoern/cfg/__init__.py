@@ -11,7 +11,7 @@ from .jil.lifter import lift_graph
 from .. import JOERN_PARSE_PATH, JOERN_EXPORT_PATH
 from ..utils import WorkDirContext
 
-l = logging.getLogger(__name__)
+_l = logging.getLogger(__name__)
 
 
 def fast_cfgs_from_source(filepath: Path, lift_cfgs=True, supergraph=True, timeout=120):
@@ -23,13 +23,13 @@ def fast_cfgs_from_source(filepath: Path, lift_cfgs=True, supergraph=True, timeo
             # filename of "cpg.bin"
             ret = run(f"{JOERN_PARSE_PATH} {filepath}".split(), capture_output=True, timeout=timeout)
             if ret.returncode != 0:
-                l.warning("Joern parse failed, stopping CFG extraction")
+                _l.warning("Joern parse failed, stopping CFG extraction")
                 return None
 
             # extras the cfgs into out_dir in same directory
             ret = run(f"{JOERN_EXPORT_PATH} --repr cfg --out out_dir".split(), capture_output=True, timeout=timeout)
             if ret.returncode != 0:
-                l.warning("Joern Export failed, stopping CFG extraction")
+                _l.warning("Joern Export failed, stopping CFG extraction")
                 return None
 
             out_dir = Path("./out_dir")
@@ -44,27 +44,40 @@ def fast_cfgs_from_source(filepath: Path, lift_cfgs=True, supergraph=True, timeo
 
                 cfgs[cfg.name] = nx.DiGraph(cfg)
 
-    if lift_cfgs:
-        jil_cfgs = {}
-        for cfg_name, cfg in cfgs.items():
-            jil_cfg = lift_graph(cfg)
-            jil_cfg.name = cfg_name
-            jil_cfgs[cfg_name] = to_supergraph(jil_cfg) if supergraph else jil_cfg
+    normalized_cfgs = {}
+    for cfg_name, cfg in cfgs.items():
+        normalized_cfgs[cfg_name] = normalize_cfg(cfg, lift_cfg=lift_cfgs, supergraph=supergraph)
 
-        cfgs = jil_cfgs
+    return normalized_cfgs
 
-    for _, cfg in cfgs.items():
-        node_attrs = {}
-        edge_attrs = {}
-        for node in cfg.nodes:
-            node_attrs[node] = {'node': node}
-        for edgd in cfg.edges:
-            edge_attrs[edgd] = {'src': edgd[0], 'dst': edgd[1]}
 
-        nx.set_node_attributes(cfg, node_attrs)
-        nx.set_edge_attributes(cfg, edge_attrs)
+def normalize_cfg(cfg: nx.DiGraph, lift_cfg=True, supergraph=True):
+    if lift_cfg:
+        jil_cfg = lift_graph(cfg)
+        jil_cfg.name = cfg.name
+        jil_cfg = to_supergraph(jil_cfg) if supergraph else jil_cfg
+        cfg = jil_cfg
 
-    return cfgs
+    node_attrs = {}
+    edge_attrs = {}
+    for node in cfg.nodes:
+        node_attrs[node] = {'node': node}
+    for edgd in cfg.edges:
+        edge_attrs[edgd] = {'src': edgd[0], 'dst': edgd[1]}
+
+    nx.set_node_attributes(cfg, node_attrs)
+    nx.set_edge_attributes(cfg, edge_attrs)
+    return cfg
+
+
+def parse_dot_cfg_string(dotcfg_string):
+    try:
+        graph = nx.nx_agraph.from_agraph(pg.AGraph(dotcfg_string))
+    except Exception as e:
+        _l.critical(f"Failed to parse CFG from dot string: {e}")
+        graph = None
+
+    return graph
 
 
 def cfg_from_dotfile(filepath: Path):
@@ -72,9 +85,4 @@ def cfg_from_dotfile(filepath: Path):
     with open(filepath, "r") as fp:
         data = fp.read()
 
-    try:
-        graph = nx.nx_agraph.from_agraph(pg.AGraph(data))
-    except Exception:
-        graph = None
-
-    return graph
+    return parse_dot_cfg_string(data)
