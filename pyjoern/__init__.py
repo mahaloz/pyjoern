@@ -9,8 +9,6 @@ import subprocess
 import urllib.request
 import math
 
-from tqdm import tqdm
-
 # initialize logging for the entire project
 import logging
 logging.getLogger("pyjoern").addHandler(logging.NullHandler())
@@ -41,6 +39,8 @@ from .parsing import parse_source
 def _download_and_save_joern_zip(save_location: Path, verify=True) -> Path:
     # XXX: hacked code for non-ssl verification
     import ssl
+    from tqdm import tqdm
+
     ssl._create_default_https_context = ssl._create_unverified_context
 
     url = f"https://github.com/joernio/joern/releases/download/{__joern_version__}/joern-cli.zip"
