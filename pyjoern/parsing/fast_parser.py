@@ -14,6 +14,11 @@ END_DELIM = "PYJOERN_DATA_END\n"
 
 
 def _run_fast_parser_scala_script(source_path: Path) -> list[dict]:
+    if not JOERN_SERVER_PATH.exists():
+        raise FileNotFoundError(f"Joern server binary not found at {JOERN_SERVER_PATH}")
+    if not FAST_PARSER_SCRIPT.exists():
+        raise FileNotFoundError(f"Fast parser script not found at {FAST_PARSER_SCRIPT}")
+
     cmd = [
         str(JOERN_SERVER_PATH),
         "--script",
@@ -23,7 +28,7 @@ def _run_fast_parser_scala_script(source_path: Path) -> list[dict]:
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0 or not proc.stdout:
-        raise RuntimeError(f"Fast parser failed in script call. Stderr: {proc.stderr}")
+        raise RuntimeError(f"Fast parser failed in script call. Stderr: {proc.stderr} | Stdout: {proc.stdout}")
 
     parsed_data = []
     found_jsons = re.findall(f"{START_DELIM}(.*?){END_DELIM}", proc.stdout, flags=re.DOTALL)
