@@ -1,4 +1,4 @@
-__version__ = f"v4.0.61.0"
+__version__ = "v4.0.61.0"
 
 import hashlib
 import os
