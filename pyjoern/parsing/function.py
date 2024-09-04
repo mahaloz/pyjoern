@@ -53,25 +53,27 @@ class Function:
         return parsed_cfg
 
     @staticmethod
-    def from_many(data: list[dict]) -> dict[str, "Function"]:
+    def from_many(data: list[dict]) -> dict[tuple[str, str], "Function"]:
         functions = [Function(**d) for d in data]
         blacklisted_names = [
             "<", "+", "*", "(", ">", "JUMPOUT", "__builtin_unreachable"
         ]
+        # func_by_name[(name, filename)] = function
         func_by_name = {}
         for f in functions:
-            if not f.name or any(f.name.startswith(bl) for bl in blacklisted_names):
+            # remove blacklisted
+            if not f.name or not f.filename or any(f.name.startswith(bl) for bl in blacklisted_names):
                 continue
 
-            cfg = f.cfg
-            if not cfg or not len(cfg.nodes):
+            # removed errored (or empty) CFGs
+            if not f.cfg or not len(f.cfg.nodes):
                 continue
 
-            # normalize out some bad funcs
-            prev_func = func_by_name.get(f.name, None)
-            if prev_func is not None and prev_func.cfg is not None and len(cfg.nodes) < len(prev_func.cfg.nodes):
+            # normalize out declarations
+            prev_func = func_by_name.get((f.name, str(f.filename)), None)
+            if prev_func is not None and prev_func.cfg is not None and len(f.cfg.nodes) < len(prev_func.cfg.nodes):
                 continue
 
-            func_by_name[f.name] = f
+            func_by_name[(f.name, str(f.filename))] = f
 
         return func_by_name

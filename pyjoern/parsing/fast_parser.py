@@ -41,11 +41,17 @@ def _run_fast_parser_scala_script(source_path: Path) -> list[dict]:
     return parsed_data
 
 
-def parse_source(source_path: Path) -> dict[str, Function]:
+def parse_source(source_path: Path) -> dict[str, Function] | dict[tuple[str, str], Function]:
     source_path = Path(source_path).absolute()
     if not source_path.exists():
         raise FileNotFoundError(f"Source file {source_path} does not exist!")
 
     data_dict = _run_fast_parser_scala_script(source_path)
-    return Function.from_many(data_dict)
+    functions_by_name = Function.from_many(data_dict)
+    if not source_path.is_dir():
+        # remove file name from dict since they are all the same
+        functions_by_name = {
+            k[0]: v for k, v in functions_by_name.items()
+        }
 
+    return functions_by_name
