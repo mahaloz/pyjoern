@@ -1,4 +1,4 @@
-__version__ = "4.0.150.1"
+__version__ = "4.0.150.2"
 
 import hashlib
 import os

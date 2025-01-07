@@ -13,7 +13,13 @@ START_DELIM = "PYJOERN_DATA_START\n"
 END_DELIM = "PYJOERN_DATA_END\n"
 
 
-def _run_fast_parser_scala_script(source_path: Path) -> list[dict]:
+def _run_fast_parser_scala_script(
+    source_path: Path,
+    no_metadata: bool = False,
+    no_cfg: bool = False,
+    no_ddg: bool = False,
+    no_ast: bool = False,
+) -> list[dict]:
     if not JOERN_SERVER_PATH.exists():
         raise FileNotFoundError(f"Joern server binary not found at {JOERN_SERVER_PATH}")
     if not FAST_PARSER_SCRIPT.exists():
@@ -26,6 +32,19 @@ def _run_fast_parser_scala_script(source_path: Path) -> list[dict]:
         "--param",
         f'target_dir={source_path}'
     ]
+    if no_metadata:
+        cmd.append("--param")
+        cmd.append("no_metadata=true")
+    if no_cfg:
+        cmd.append("--param")
+        cmd.append("no_cfg=true")
+    if no_ddg:
+        cmd.append("--param")
+        cmd.append("no_ddg=true")
+    if no_ast:
+        cmd.append("--param")
+        cmd.append("no_ast=true")
+
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0 or not proc.stdout:
         raise RuntimeError(f"Fast parser failed in script call. Stderr: {proc.stderr} | Stdout: {proc.stdout}")
@@ -41,13 +60,21 @@ def _run_fast_parser_scala_script(source_path: Path) -> list[dict]:
     return parsed_data
 
 
-def parse_source(source_path: Path) -> dict[str, Function] | dict[tuple[str, str], Function]:
+def parse_source(
+    source_path: Path,
+    no_metadata: bool = False,
+    no_cfg: bool = False,
+    no_ddg: bool = False,
+    no_ast: bool = False,
+) -> dict[str, Function] | dict[tuple[str, str], Function]:
     source_path = Path(source_path).absolute()
     if not source_path.exists():
         raise FileNotFoundError(f"Source file {source_path} does not exist!")
 
-    data_dict = _run_fast_parser_scala_script(source_path)
-    functions_by_name = Function.from_many(data_dict)
+    data_dict = _run_fast_parser_scala_script(
+        source_path, no_metadata=no_metadata, no_cfg=no_cfg, no_ddg=no_ddg, no_ast=no_ast
+    )
+    functions_by_name = Function.from_many(data_dict, ignore_cfg=no_cfg)
     if not source_path.is_dir():
         # remove file name from dict since they are all the same
         functions_by_name = {

@@ -34,9 +34,9 @@ class Function:
         self.start_line = start_line
         self.end_line = end_line
         self.signature = signature
-        self.cfg = self._parse_dot_cfg_string(cfg) if isinstance(cfg, (str, list)) else cfg
-        self.ddg = self._parse_dot_cfg_string(ddg, supergraph=False) if isinstance(ddg, (str, list)) else ddg
-        self.ast = self._parse_dot_cfg_string(ast, supergraph=False) if isinstance(ast, (str, list)) else ast
+        self.cfg = self._parse_dot_cfg_string(cfg) if isinstance(cfg, (str, list)) and cfg else cfg
+        self.ddg = self._parse_dot_cfg_string(ddg, supergraph=False) if isinstance(ddg, (str, list)) and ddg else ddg
+        self.ast = self._parse_dot_cfg_string(ast, supergraph=False) if isinstance(ast, (str, list)) and ast else ast
 
     def __str__(self):
         return f"<Function {self.name} {self.signature} {self.start_line}:{self.end_line}>"
@@ -57,7 +57,7 @@ class Function:
         return parsed_cfg
 
     @staticmethod
-    def from_many(data: list[dict]) -> dict[tuple[str, str], "Function"]:
+    def from_many(data: list[dict], ignore_cfg=False) -> dict[tuple[str, str], "Function"]:
         functions = [Function(**d) for d in data]
         blacklisted_names = [
             "<", "+", "*", "(", ">", "JUMPOUT", "__builtin_unreachable"
@@ -69,8 +69,8 @@ class Function:
             if not f.name or not f.filename or any(f.name.startswith(bl) for bl in blacklisted_names):
                 continue
 
-            # removed errored (or empty) CFGs
-            if not f.cfg or not len(f.cfg.nodes):
+            # removed errored (or empty) CFGs, when we care about them
+            if not ignore_cfg and (not f.cfg or not len(f.cfg.nodes)):
                 continue
 
             # normalize out declarations

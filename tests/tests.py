@@ -42,6 +42,20 @@ class TestParsing(unittest.TestCase):
         functions = parse_source(TEST_SOURCE_DIR / "ida9_fmt_coreutils.c")
         assert len(functions) == 23
 
+    def test_parsing_disabling(self):
+        funcs = parse_source(TEST_SOURCE_DIR / "simple.c", no_metadata=True)
+        assert funcs['schedule_job'].filename is not None
+        assert not funcs['schedule_job'].control_structures
+
+        funcs = parse_source(TEST_SOURCE_DIR / "simple.c", no_metadata=True, no_cfg=True)
+        assert not funcs['schedule_job'].cfg
+
+        funcs = parse_source(TEST_SOURCE_DIR / "simple.c", no_metadata=True, no_cfg=True, no_ddg=True)
+        assert not funcs['schedule_job'].ddg
+
+        funcs = parse_source(TEST_SOURCE_DIR / "simple.c", no_metadata=True, no_cfg=True, no_ddg=True, no_ast=True)
+        assert not funcs['schedule_job'].ast
+
     def test_fast_cfg(self):
         cfg = fast_cfgs_from_source(TEST_SOURCE_DIR / "simple.c")["main"]
         assert cfg is not None, "CFG did not actually parse"
