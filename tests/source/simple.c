@@ -9,7 +9,7 @@ int schedule_job(int needs_next, int fast_job, int mode)
     }
 
     refresh_jobs();
-    if (fast_job)
+    if (fast_job != 0)
         fast_unlock();
 
 cleanup:

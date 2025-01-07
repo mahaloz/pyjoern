@@ -24,10 +24,11 @@ def escapeString(str: String): String = {
 
 @main def exec(target_dir: String) = {
   val cpg = importCode(target_dir)
-  val function_names = cpg.method.filter(node => node.lineNumber!=None&&node.lineNumberEnd!=None).fullName.l
-  // process by each function name
-  function_names.foreach { function_name =>
-    val func_details = cpg.method.filter(y => y.fullName==function_name)
+  val function_names = cpg.method.filter(node => node.lineNumber != None && node.lineNumberEnd != None).map(node => (node.fullName, node.filename)).l
+
+  // Process by each function name and filename
+  function_names.foreach { case (function_name, filename) =>
+    val func_details = cpg.method.filter(y => y.fullName == function_name && y.filename == filename)
       // filter all declarations (functions with no code)
       .filter(node => node.lineNumber!=None&&node.lineNumberEnd!=None&&node.body.typeFullName!="<empty>")
       .map(x => (
@@ -42,6 +43,8 @@ def escapeString(str: String): String = {
         x.call.name.l,
         x.controlStructure.condition.code.l,
         x.dotCfg.l,
+        x.dotDdg.l,
+        x.dotAst.l
       ))
       .l
       .map { case (
@@ -55,7 +58,9 @@ def escapeString(str: String): String = {
         gotos,
         calls,
         control_structures,
-        cfg
+        cfg,
+        ddg,
+        ast
         ) =>
       function_name -> Map(
         "fullfuncname" -> fullfuncname,
@@ -68,7 +73,9 @@ def escapeString(str: String): String = {
         "gotos" -> gotos,
         "calls" -> calls,
         "control_structures" -> control_structures,
-        "cfg" -> cfg
+        "cfg" -> cfg,
+        "ddg" -> ddg,
+        "ast" -> ast
         )
       }.toMap
 
@@ -104,6 +111,8 @@ def escapeString(str: String): String = {
         "calls" -> func_details.get(function_name).get("calls"),
         "control_structures" -> func_details.get(function_name).get("control_structures"),
         "cfg" -> func_details.get(function_name).get("cfg"),
+        "ddg" -> func_details.get(function_name).get("ddg"),
+        "ast" -> func_details.get(function_name).get("ast")
       )
 
       // Convert function_data_dump to JSON string
