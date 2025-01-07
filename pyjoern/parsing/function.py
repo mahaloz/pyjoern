@@ -20,6 +20,8 @@ class Function:
         end_line: int | None = None,
         signature: str | None = None,
         cfg: nx.DiGraph | str | list | None = None,
+        ddg: nx.DiGraph | str | list | None = None,
+        ast: nx.DiGraph | str | list | None = None,
     ):
         self.name = name
         self.return_type = return_type
@@ -33,6 +35,8 @@ class Function:
         self.end_line = end_line
         self.signature = signature
         self.cfg = self._parse_dot_cfg_string(cfg) if isinstance(cfg, (str, list)) else cfg
+        self.ddg = self._parse_dot_cfg_string(ddg, supergraph=False) if isinstance(ddg, (str, list)) else ddg
+        self.ast = self._parse_dot_cfg_string(ast, supergraph=False) if isinstance(ast, (str, list)) else ast
 
     def __str__(self):
         return f"<Function {self.name} {self.signature} {self.start_line}:{self.end_line}>"
@@ -44,11 +48,11 @@ class Function:
         return self.__dict__ == other.__dict__
 
     @staticmethod
-    def _parse_dot_cfg_string(cfg_data: str | list) -> nx.DiGraph:
+    def _parse_dot_cfg_string(cfg_data: str | list, supergraph=True) -> nx.DiGraph:
         cfg_str = cfg_data if isinstance(cfg_data, str) else cfg_data[0]
         parsed_cfg = parse_dot_cfg_string(cfg_str)
         if parsed_cfg is not None:
-            parsed_cfg = normalize_cfg(parsed_cfg, lift_cfg=True, supergraph=True)
+            parsed_cfg = normalize_cfg(parsed_cfg, lift_cfg=True, supergraph=supergraph)
 
         return parsed_cfg
 

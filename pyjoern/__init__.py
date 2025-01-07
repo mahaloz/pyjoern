@@ -1,4 +1,4 @@
-__version__ = "4.0.61.2"
+__version__ = "4.0.150.1"
 
 import hashlib
 import os
@@ -19,13 +19,13 @@ del Loggers
 
 _l = logging.getLogger(__name__)
 
-JOERN_VERSION = "v4.0.61"
+JOERN_VERSION = "v4.0.150"
 JOERN_BIN_DIR_PATH = Path(Path(str(importlib.resources.files("pyjoern"))) / "bin/joern-cli").absolute()
 JOERN_SERVER_PATH = JOERN_BIN_DIR_PATH / "joern"
 JOERN_EXPORT_PATH = JOERN_BIN_DIR_PATH / "joern-export"
 JOERN_PARSE_PATH = JOERN_BIN_DIR_PATH / "joern-parse"
 # must update both of these on supported Joern backend update
-JOERN_ZIP_HASH = "fa40c38554d26942abec8dd5de9933d48269ccaa1e0271dfcd134801bfc4bc4f988d6b629f2bacc75a0fecc97a31393cfe46e8effb01692c1a1994ddcffa7cf4"
+JOERN_ZIP_HASH = "07b806e2e5bc4fc291e75c9dbdd1aea9658632f08564788116e3d11611dc1001a252ffef8413e296c9f4d457970afc2a183276c7fa5c82dc5ae87810cbf829f5"
 # must be imported after defining project wide constants
 from .client import JoernClient
 from .server import JoernServer

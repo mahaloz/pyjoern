@@ -208,3 +208,31 @@ class MergedRegionStart(Statement):
 
     def __str__(self):
         return f"<{self.__class__.__name__}: {self.source_line_number}, {self.total_nodes} Nodes>"
+
+
+# TODO: change these to expressions
+
+#
+# Variables
+#
+
+class Variable(Statement):
+    def __init__(self, raw_text, name, type_, **kwargs):
+        super().__init__(raw_text, **kwargs)
+        self.name = name
+        self.type = type_
+
+    def __str__(self):
+        return f"{self.type} {self.name}"
+
+
+class Parameter(Variable):
+    pass
+
+
+class LocalVariable(Variable):
+    pass
+
+
+class GlobalVariable(Variable):
+    pass

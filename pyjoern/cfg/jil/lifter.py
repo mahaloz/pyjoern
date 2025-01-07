@@ -5,7 +5,7 @@ import logging
 
 from .block import Block
 from .statement import (
-    UnsupportedStmt, UnknownStmt, Assignment, Compare, BinOp, Return, Call, Ternary, Nop
+    UnsupportedStmt, UnknownStmt, Assignment, Compare, BinOp, Return, Call, Ternary, Nop, Parameter
 )
 
 import networkx as nx
@@ -27,6 +27,7 @@ STMT_MAP = {
     "return": (Return, None),
     "call": (Call, None),
     "conditional": (Ternary, None),
+    "PARAM": (Parameter, None),
 }
 
 
@@ -83,7 +84,10 @@ def lift_statement(raw_data: str):
     line_num_kwarg = {"source_line_number": source_line_number}
 
     _t = "(".join(raw_data.split("(")[1:])
-    raw_stmt = "".join(_t.split(")<SUB>")[0:-1]).replace(" ", "")
+    new_whitespace = ""
+    if _t.startswith("PARAM"):
+        new_whitespace = " "
+    raw_stmt = "".join(_t.split(")<SUB>")[0:-1]).replace(" ", new_whitespace)
 
     # statement
     is_stmt = True
@@ -136,8 +140,13 @@ def lift_statement(raw_data: str):
         else:
             return jil_stmt_cls(t, *ops, **line_num_kwarg)
     else:
-        t = raw_stmt.replace(" ", "")
+        if raw_stmt.startswith("PARAM"):
+            data = raw_stmt.split("PARAM")[1]
+            typ, name = data.split(" ")
+            typ = typ.replace(",", "")
+            return Parameter(raw_stmt, name, typ, **line_num_kwarg)
 
+        t = raw_stmt.replace(" ", "")
         # check if call
         try:
             t_no_comma = t.split(",")
