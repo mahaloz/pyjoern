@@ -8,6 +8,8 @@ import pygraphviz as pg
 from cfgutils.transformations import to_supergraph
 
 from .jil.lifter import lift_graph
+from .jil.block import Block
+from .jil.statement import Nop
 from .. import JOERN_PARSE_PATH, JOERN_EXPORT_PATH
 from ..utils import WorkDirContext
 
@@ -51,7 +53,7 @@ def fast_cfgs_from_source(filepath: Path, lift_cfgs=True, supergraph=True, timeo
     return normalized_cfgs
 
 
-def normalize_cfg(cfg: nx.DiGraph, lift_cfg=True, supergraph=True):
+def normalize_cfg(cfg: nx.DiGraph, lift_cfg=True, supergraph=True, remove_singleton_funcend=True):
     if lift_cfg:
         jil_cfg = lift_graph(cfg)
         jil_cfg.name = cfg.name
@@ -67,6 +69,25 @@ def normalize_cfg(cfg: nx.DiGraph, lift_cfg=True, supergraph=True):
 
     nx.set_node_attributes(cfg, node_attrs)
     nx.set_edge_attributes(cfg, edge_attrs)
+
+    # When joern creates a CFG, it uses special nodes, called funcends here, to represent the end of a function.
+    # This can be seen if you have a program with multiple returns. Each return node will have an edge to the
+    # funcend node. This is normally fine, but, when you use metrics on a CFG that rely on the number of edges
+    # and nodes in the CFG, the funcend node can skew the results. The flag below for this specific case, since
+    # there can be funcend nodes that get merged with normal code, or programs that have many in them.
+    if remove_singleton_funcend:
+        # find the singleton funcend node and remove it (but only if there is only one)
+        funcends = []
+        for node in cfg.nodes:
+            node: Block
+            if cfg.out_degree(node) == 0 and len(node.statements) == 1:
+                stmt = node.statements[0]
+                if isinstance(stmt, Nop) and stmt.type == Nop.FUNC_END:
+                    funcends.append(node)
+
+        if len(funcends) == 1:
+            cfg.remove_node(funcends[0])
+
     return cfg
 
 
