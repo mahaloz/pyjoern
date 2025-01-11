@@ -56,6 +56,20 @@ class TestParsing(unittest.TestCase):
         funcs = parse_source(TEST_SOURCE_DIR / "simple.c", no_metadata=True, no_cfg=True, no_ddg=True, no_ast=True)
         assert not funcs['schedule_job'].ast
 
+    def test_cfg_accurate(self):
+        cfg = fast_cfgs_from_source(TEST_SOURCE_DIR / "nginx/fake_handler.c")["ngx_mail_pop3_init_session"]
+        assert cfg is not None, "CFG did not actually parse"
+
+        # the real cyclo complexity is 3 when using the condition statement counting trick
+        # 4 conditions statements
+        # 3 exits
+        #
+        # cc = (4) - (3) + 2
+        #
+        # the CFG should also reflect this
+        cc = len(cfg.edges) - len(cfg.nodes) + 2
+        assert cc == 3, f"Expected CC of 3, got {cc}"
+
     def test_fast_cfg(self):
         cfg = fast_cfgs_from_source(TEST_SOURCE_DIR / "simple.c")["main"]
         assert cfg is not None, "CFG did not actually parse"
