@@ -3,7 +3,7 @@ import re
 import logging
 from typing import Set
 from pathlib import Path
-
+import pygraphviz as pg
 from cpgqls_client import CPGQLSClient, import_code_query
 import networkx as nx
 
