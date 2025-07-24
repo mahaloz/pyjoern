@@ -3,6 +3,7 @@ import importlib.resources
 import subprocess
 import json
 import re
+import tempfile
 
 from .. import JOERN_SERVER_PATH
 from .function import Function
@@ -60,16 +61,85 @@ def _run_fast_parser_scala_script(
     return parsed_data
 
 
+def preprocess_decompilation(decompiled_code_path: Path) -> tuple[bool, bool]:
+    # TODO: right now this writes back to file, but all things should be done on a new temp file, fix later
+    code_updated = False
+    with open(decompiled_code_path, "r") as f:
+        code = f.read()
+
+    # check for gotos
+    has_gotos = "goto" in code
+
+    # remove special __rustcall in ghidra
+    if "__rustcall" in code:
+        pattern = r"undefined\s+\[\d{1,4}\]\s+__rustcall"
+        code = re.sub(pattern, "undefined", code)
+        code_updated |= True
+
+    # remove special ida things
+    # TODO: if we ever do more than x64, this needs to be updated!
+    replacement_map = {
+        "__int8": "char",
+        "__int16": "short",
+        "__int32": "int",
+        "__int64": "long",
+        "__fastcall": "",
+        "__noreturn": "",
+        "__cdecl": "",
+    }
+    for k, v in replacement_map.items():
+        if k in code:
+            code = code.replace(k, v)
+            code_updated |= True
+
+    # remove things that cause joern to crash
+    bad_strings = ["__rustcall",]
+    for bad_string in bad_strings:
+        if bad_string in code:
+            code_updated |= True
+
+        code = code.replace(bad_string, "")
+
+    # header replacements for joern (happens in Rust/C++ decompilation)
+    code_lines = code.split("\n")
+    header_replacements = {
+        "new": "new_joern_token",
+        "delete": "delete_joern_token",
+    }
+    for idx, line in enumerate(code_lines):
+        # only for the header!
+        if idx > 2:
+            break
+
+        # replace if found
+        for old, new in header_replacements.items():
+            if old in line:
+                code_lines[idx] = line.replace(old, new)
+                code_updated |= True
+    code = "\n".join(code_lines)
+
+    # write back if updated
+    if code_updated:
+        with open(decompiled_code_path, "w") as f:
+            f.write(code)
+
+    return code_updated, has_gotos
+
+
 def parse_source(
     source_path: Path,
     no_metadata: bool = False,
     no_cfg: bool = False,
     no_ddg: bool = False,
     no_ast: bool = False,
+    is_decompilation: bool = False,
 ) -> dict[str, Function] | dict[tuple[str, str], Function]:
     source_path = Path(source_path).absolute()
     if not source_path.exists():
         raise FileNotFoundError(f"Source file {source_path} does not exist!")
+
+    if is_decompilation:
+        preprocess_decompilation(source_path)
 
     data_dict = _run_fast_parser_scala_script(
         source_path, no_metadata=no_metadata, no_cfg=no_cfg, no_ddg=no_ddg, no_ast=no_ast
