@@ -3,7 +3,8 @@ import importlib.resources
 import subprocess
 import json
 import re
-import tempfile
+
+import networkx as nx
 
 from .. import JOERN_SERVER_PATH
 from .function import Function
@@ -152,3 +153,28 @@ def parse_source(
         }
 
     return functions_by_name
+
+def parse_callgraph(source_path: Path, is_decompilation: bool = False) -> nx.DiGraph:
+    """
+    Given a path to a source file or directory root, parses all functions and creates a callgraph.
+    A callgraph is defined as the following:
+    - Every node is a function in the source code.
+    - Every edge is a call from one function to another.
+    - Every node will only appear once in the graph, even if it is called multiple times.
+
+    :param source_path: Path to source file or directory root.
+    :param is_decompilation: True when the source is a decompiler created, False otherwise.
+    :return:
+    """
+    # parse the source to get functions
+    functions_by_name = parse_source(source_path, no_metadata=True, no_cfg=True, no_ddg=True, no_ast=True, is_decompilation=is_decompilation)
+
+    # create a callgraph
+    callgraph = nx.DiGraph()
+    edges = []
+    for func in functions_by_name.values():
+        for callee in func.callees:
+            edges.append((func.name, callee))
+    callgraph.add_edges_from(edges)
+
+    return callgraph

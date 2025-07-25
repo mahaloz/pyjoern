@@ -2,7 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from pyjoern import fast_cfgs_from_source, parse_source, JoernClient, JoernServer
+from pyjoern import fast_cfgs_from_source, parse_source, JoernClient, JoernServer, parse_callgraph
 from pyjoern.parsing.function import Function
 
 TEST_SOURCE_DIR = Path(__file__).absolute().parent / "source"
@@ -73,6 +73,18 @@ class TestParsing(unittest.TestCase):
     def test_fast_cfg(self):
         cfg = fast_cfgs_from_source(TEST_SOURCE_DIR / "simple.c")["main"]
         assert cfg is not None, "CFG did not actually parse"
+
+    def test_callgraph(self):
+        callgraph = parse_callgraph(TEST_SOURCE_DIR / "simple.c")
+        assert callgraph is not None, "Callgraph did not parse"
+
+        # remember, functions called multiple times will only appear once, but have multiple edges
+        assert len(callgraph.nodes) == 9
+        assert len(callgraph.edges) == 8
+
+        # make sure main is the root
+        assert 'main' in callgraph.nodes
+        assert callgraph.in_degree['main'] == 0
 
 
 class TestJoernServer(unittest.TestCase):
