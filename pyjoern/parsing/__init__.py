@@ -1,1 +1,1 @@
-from .fast_parser import parse_source
+from .fast_parser import parse_source, parse_callgraph

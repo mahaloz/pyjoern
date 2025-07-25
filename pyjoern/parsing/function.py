@@ -22,6 +22,7 @@ class Function:
         cfg: nx.DiGraph | str | list | None = None,
         ddg: nx.DiGraph | str | list | None = None,
         ast: nx.DiGraph | str | list | None = None,
+        callees: list[str] | None = None,
     ):
         self.name = name
         self.return_type = return_type
@@ -39,6 +40,7 @@ class Function:
             if isinstance(ddg, (str, list)) and ddg else ddg
         self.ast = self._parse_dot_cfg_string(ast, supergraph=False, remove_singleton_funcend=False) \
             if isinstance(ast, (str, list)) and ast else ast
+        self.callees = callees or []
 
     def __str__(self):
         return f"<Function {self.name} {self.signature} {self.start_line}:{self.end_line}>"
@@ -81,6 +83,9 @@ class Function:
             prev_func = func_by_name.get((f.name, str(f.filename)), None)
             if prev_func is not None and prev_func.cfg is not None and len(f.cfg.nodes) < len(prev_func.cfg.nodes):
                 continue
+
+            # clean all callees of the function to also conform to the same format
+            f.callees = [c for c in f.callees if not any(c.startswith(bl) for bl in blacklisted_names)]
 
             func_by_name[(f.name, str(f.filename))] = f
 

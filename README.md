@@ -31,6 +31,8 @@ main_func = cfgs["main"]
 print(main_func.edges)
 ```
 
+See the [tests](./tests/tests.py) for more examples of how to use PyJoern.
+
 ## Versioning
 The current version of PyJoern can be found in [pyjoern/\_\_init\_\_.py] as `__version__`.
 The point in the version is the PyJoern specific updates. 

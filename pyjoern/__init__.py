@@ -1,4 +1,4 @@
-__version__ = "4.0.150.3"
+__version__ = "4.0.150.4"
 
 import hashlib
 import os
@@ -30,7 +30,7 @@ JOERN_ZIP_HASH = "07b806e2e5bc4fc291e75c9dbdd1aea9658632f08564788116e3d11611dc10
 from .client import JoernClient
 from .server import JoernServer
 from .cfg import fast_cfgs_from_source
-from .parsing import parse_source
+from .parsing import parse_source, parse_callgraph
 
 
 #

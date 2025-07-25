@@ -55,7 +55,8 @@ def escapeString(str: String): String = {
           if (!no_metadata) x.controlStructure.condition.code.l else List.empty,
           cfg,
           ddg,
-          ast
+          ast,
+          x.callee.name.l
         )
       }
       .l
@@ -72,7 +73,8 @@ def escapeString(str: String): String = {
         control_structures,
         cfg,
         ddg,
-        ast
+        ast,
+        callees
       ) =>
         function_name -> Map(
           "fullfuncname" -> fullfuncname,
@@ -87,7 +89,8 @@ def escapeString(str: String): String = {
           "control_structures" -> control_structures,
           "cfg" -> cfg,
           "ddg" -> ddg,
-          "ast" -> ast
+          "ast" -> ast,
+          "callees" -> callees
         )
       }.toMap
 
@@ -124,7 +127,8 @@ def escapeString(str: String): String = {
         "control_structures" -> func_details(function_name)("control_structures"),
         "cfg" -> func_details(function_name)("cfg"),
         "ddg" -> func_details(function_name)("ddg"),
-        "ast" -> func_details(function_name)("ast")
+        "ast" -> func_details(function_name)("ast"),
+        "callees" -> func_details(function_name)("callees")
       )
 
       val json_function_data_dump = toJson_pp(function_data_dump)
