@@ -3,7 +3,6 @@ __version__ = "4.0.612.0"
 import hashlib
 import os
 from pathlib import Path
-import importlib.resources
 import platform
 import shutil
 import subprocess
@@ -22,7 +21,11 @@ del Loggers
 _l = logging.getLogger(__name__)
 
 JOERN_VERSION = "v4.0.612"
-JOERN_BIN_DIR_PATH = Path(Path(str(importlib.resources.files("pyjoern"))) / "bin/joern-cli").absolute()
+# Joern's native frontends (rust2cpg and friends) locate their astgen helper by walking up from their
+# own jar for as long as the whole path still contains "lib", so an install under site-packages sends
+# them looking in the Python prefix instead. The backend therefore lives outside the package.
+JOERN_DIR_ENV_VAR = "PYJOERN_JOERN_DIR"
+JOERN_BIN_DIR_PATH = Path(os.environ.get(JOERN_DIR_ENV_VAR) or Path.home() / ".pyjoern").absolute() / "joern-cli"
 JOERN_SERVER_PATH = JOERN_BIN_DIR_PATH / "joern"
 JOERN_EXPORT_PATH = JOERN_BIN_DIR_PATH / "joern-export"
 JOERN_PARSE_PATH = JOERN_BIN_DIR_PATH / "joern-parse"
@@ -110,6 +113,21 @@ def _download_and_save_joern_zip(save_location: Path, verify=True) -> Path:
     return save_location
 
 
+def _warn_on_unresolvable_astgen_dir():
+    """
+    Warns when the install path defeats how Joern locates the astgen helpers its native frontends need.
+
+    Joern walks up from a frontend jar while the path still contains "lib", so it lands on the wrong
+    directory whenever any ancestor of the install has "lib" in its name.
+    """
+    if "lib" in str(JOERN_BIN_DIR_PATH):
+        _l.warning(
+            f"Joern is installed under {JOERN_BIN_DIR_PATH}, which contains 'lib'. Joern's native "
+            f"frontends (Rust among them) will look for their astgen helpers in the wrong directory. "
+            f"Set ${JOERN_DIR_ENV_VAR} to a path without 'lib' in it to parse those languages."
+        )
+
+
 def installed_joern_version() -> str | None:
     """
     The version of the Joern backend currently installed on this system, or None when there is none.
@@ -127,8 +145,7 @@ def _download_joern():
         return
 
     # download joern
-    if not JOERN_BIN_DIR_PATH.parent.exists():
-        os.mkdir(JOERN_BIN_DIR_PATH.parent)
+    JOERN_BIN_DIR_PATH.parent.mkdir(parents=True, exist_ok=True)
     joern_zip_file = _download_and_save_joern_zip(JOERN_BIN_DIR_PATH.parent / joern_zip_name(), verify=True)
     # unzip joern
     subprocess.run(["unzip", str(joern_zip_file)], cwd=str(JOERN_BIN_DIR_PATH.parent), capture_output=True, check=True)
@@ -139,6 +156,7 @@ def _download_joern():
         raise Exception("Failed to download Joern!")
 
 
+_warn_on_unresolvable_astgen_dir()
 _installed_version = installed_joern_version()
 if _installed_version != JOERN_VERSION:
     if _installed_version is None:

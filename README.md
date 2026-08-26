@@ -12,6 +12,12 @@ pip3 install pyjoern && pyjoern --install
 
 Running `pyjoern --install` will init the Joern package for this first time, which will download the backend.
 
+The backend is installed to `~/.pyjoern/joern-cli`, outside the Python package: Joern's native frontends
+resolve their helper binaries relative to their own install path and mis-resolve it under any directory
+named `lib`, which every `site-packages` path contains. Set `$PYJOERN_JOERN_DIR` to install it elsewhere.
+If you are upgrading from PyJoern 4.0.150 or older, the old backend is left behind in
+`<site-packages>/pyjoern/bin/joern-cli` and can be deleted.
+
 ## Usage
 Use PyJoern as a library for collecting info on source and getting a CFG. 
 The IL the source CFG is lifted to is described in [JIL](./pyjoern/cfg/jil/statement.py).
