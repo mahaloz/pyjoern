@@ -1,0 +1,5 @@
+# joern's rust2cpg loads its input as a Cargo workspace, so a Rust target must be a real crate
+[package]
+name = "simple"
+version = "0.1.0"
+edition = "2021"

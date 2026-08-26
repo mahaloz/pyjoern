@@ -74,20 +74,38 @@ def lift_block(node, graph, addr_dict=None):
     return Block(new_addr, statements=statements, idx=new_idx)
 
 
+def normalize_dot_label(raw_data: str) -> tuple[str, int | None]:
+    """
+    Normalizes a Joern dot node label down to `<name>,<field>,...` and its source line number.
+
+    Joern up to v4.0.150 labeled nodes as `(<name>,<field>,...)<SUB><line></SUB>`, newer versions
+    label them as `<name>, <line><BR/><field><BR/>...`. Both are accepted here so that a stale
+    backend keeps lifting.
+    """
+    legacy_line = re.findall("<SUB>([0-9]+)</SUB>", raw_data)
+    if legacy_line:
+        body = "(".join(raw_data.split("(")[1:])
+        return "".join(body.split(")<SUB>")[0:-1]), int(legacy_line[0], 10)
+
+    header, _, fields = raw_data.partition("<BR/>")
+    name, _, line = header.rpartition(",")
+    line = line.strip()
+    if not name or not line.isdigit():
+        # labels Joern emits without a line number, like the empty ones used for unknown nodes
+        return raw_data.replace("<BR/>", ","), None
+
+    raw_stmt = ",".join([name] + fields.split("<BR/>")) if fields else name
+    return raw_stmt, int(line, 10)
+
+
 def lift_statement(raw_data: str):
-    source_line_number = re.findall("<SUB>([0-9]+)</SUB>", raw_data)
-    if source_line_number:
-        source_line_number = int(source_line_number[0], 10)
-    else:
+    raw_stmt, source_line_number = normalize_dot_label(raw_data)
+    if source_line_number is None:
         l.debug(f"Failed to parse line number of node!")
-        source_line_number = None
     line_num_kwarg = {"source_line_number": source_line_number}
 
-    _t = "(".join(raw_data.split("(")[1:])
-    new_whitespace = ""
-    if _t.startswith("PARAM"):
-        new_whitespace = " "
-    raw_stmt = "".join(_t.split(")<SUB>")[0:-1]).replace(" ", new_whitespace)
+    new_whitespace = " " if raw_stmt.startswith("PARAM") else ""
+    raw_stmt = raw_stmt.replace(" ", new_whitespace)
 
     # statement
     is_stmt = True
