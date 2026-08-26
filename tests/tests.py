@@ -1,3 +1,4 @@
+import shutil
 import sys
 import unittest
 from pathlib import Path
@@ -23,7 +24,7 @@ class TestParsing(unittest.TestCase):
         assert schedule_job.ddg is not None
 
         # manually counted
-        assert len(schedule_job.ast.nodes) == 32
+        assert len(schedule_job.ast.nodes) == 34
 
     def test_multiple_file_parser(self):
         functions = parse_source(TEST_SOURCE_DIR / "nginx")
@@ -37,6 +38,23 @@ class TestParsing(unittest.TestCase):
         assert func2 is not None
 
         assert len(functions) == 11
+
+    @unittest.skipIf(shutil.which("cargo") is None, "Joern's Rust frontend needs cargo on the PATH")
+    def test_rust_parser(self):
+        # rust2cpg loads its input as a Cargo workspace, so Rust is parsed a crate at a time
+        functions = parse_source(TEST_SOURCE_DIR / "rust_simple")
+
+        schedule_job: Function = functions.get(("schedule_job", "src/main.rs"), None)
+        assert schedule_job is not None
+        assert schedule_job.start_line == 11
+        assert schedule_job.cfg is not None
+        assert set(schedule_job.callees) == {
+            "complete_job", "next_job", "refresh_jobs", "fast_unlock", "log_workers", "job_status"
+        }
+
+        main: Function = functions.get(("main", "src/main.rs"), None)
+        assert main is not None
+        assert "schedule_job" in main.callees
 
     def test_decompiler_c_parser(self):
         functions = parse_source(TEST_SOURCE_DIR / "ida9_fmt_coreutils.c")

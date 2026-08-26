@@ -33,6 +33,19 @@ print(main_func.edges)
 
 See the [tests](./tests/tests.py) for more examples of how to use PyJoern.
 
+### Rust
+Joern parses Rust with `rust2cpg`, which loads its input as a Cargo workspace. Rust targets must
+therefore be a crate root (a directory with a `Cargo.toml`), not a lone `.rs` file, and `cargo` and
+`rustc` must be on your `PATH`.
+
+```python
+functions = parse_source("tests/source/rust_simple")
+schedule_job = functions[("schedule_job", "src/main.rs")]
+print(schedule_job.cfg)
+```
+
+Note that `rust2cpg` does not record where a function ends, so `end_line` is `None` for Rust.
+
 ## Versioning
 The current version of PyJoern can be found in [pyjoern/\_\_init\_\_.py] as `__version__`.
 The point in the version is the PyJoern specific updates. 

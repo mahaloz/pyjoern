@@ -28,7 +28,7 @@ def escapeString(str: String): String = {
   val cpg = importCode(target_dir)
 
   val function_names = cpg.method
-    .filter(node => node.lineNumber.isDefined && node.lineNumberEnd.isDefined)
+    .filter(node => node.lineNumber.isDefined)
     .map(node => (node.fullName, node.filename))
     .l
 
@@ -36,7 +36,7 @@ def escapeString(str: String): String = {
   function_names.foreach { case (function_name, filename) =>
     val func_details = cpg.method
       .filter(y => y.fullName == function_name && y.filename == filename)
-      .filter(node => node.lineNumber.isDefined && node.lineNumberEnd.isDefined && node.body.typeFullName != "<empty>")
+      .filter(node => node.lineNumber.isDefined && node.body.typeFullName != "<empty>")
       .map { x =>
         val cfg = if (!no_cfg) x.dotCfg.l else List.empty
         val ddg = if (!no_ddg) x.dotDdg.l else List.empty
@@ -46,7 +46,7 @@ def escapeString(str: String): String = {
           x.fullName,
           x.filename,
           x.lineNumber.getOrElse(0),
-          x.lineNumberEnd.getOrElse(None),
+          x.lineNumberEnd.getOrElse(null),
           x.signature,
           x.name,
           x.signature,
@@ -96,7 +96,7 @@ def escapeString(str: String): String = {
 
     val macro_count = if (!no_metadata) {
       cpg.method
-        .filter(node => node.lineNumber.isDefined && node.lineNumberEnd.isDefined && node.body.typeFullName != "<empty>")
+        .filter(node => node.lineNumber.isDefined && node.body.typeFullName != "<empty>")
         .filter(_.fullName == function_name)
         .where(_.body.typeFullName("ANY"))
         .size

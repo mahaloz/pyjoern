@@ -1,9 +1,11 @@
-__version__ = "4.0.150.4"
+__version__ = "4.0.612.0"
 
 import hashlib
 import os
 from pathlib import Path
 import importlib.resources
+import platform
+import shutil
 import subprocess
 import urllib.request
 import math
@@ -19,13 +21,50 @@ del Loggers
 
 _l = logging.getLogger(__name__)
 
-JOERN_VERSION = "v4.0.150"
+JOERN_VERSION = "v4.0.612"
 JOERN_BIN_DIR_PATH = Path(Path(str(importlib.resources.files("pyjoern"))) / "bin/joern-cli").absolute()
 JOERN_SERVER_PATH = JOERN_BIN_DIR_PATH / "joern"
 JOERN_EXPORT_PATH = JOERN_BIN_DIR_PATH / "joern-export"
 JOERN_PARSE_PATH = JOERN_BIN_DIR_PATH / "joern-parse"
-# must update both of these on supported Joern backend update
-JOERN_ZIP_HASH = "07b806e2e5bc4fc291e75c9dbdd1aea9658632f08564788116e3d11611dc1001a252ffef8413e296c9f4d457970afc2a183276c7fa5c82dc5ae87810cbf829f5"
+# Joern ships a platform-specific release zip (native frontends like rust2cpg are compiled per-platform).
+# Both the version above and every hash below must be updated on a supported Joern backend update. The
+# hashes are the ones published as `<zip_name>.sha512` next to each release asset.
+JOERN_ZIP_HASHES = {
+    "joern-cli-linux-arm64.zip": "c5d26914a13c8fa08b354e0efd66e49160882345906ec01f90727213232b2668f456dc632a2390c04f3b01c87aaf5433b08ce174e022fca6a2d91bb6796fb4c1",
+    "joern-cli-linux-x86_64.zip": "9150546302bcb020aab8a4e7efc9c3b9ca37d5679f0316066cbe332f3628f33c41658a7c8b686c2ff13f7c29ead3881627ef01701dca74e1b1ad0d1018e922a8",
+    "joern-cli-macos-arm64.zip": "ad3c920469448db672f1fa71cbd9cbe7d4d79c4093415bb38139cc71b3048175eb3cad64e90e6672aacfa82f2d2d48e2ca121977c602069d20889e9a25feb1d3",
+    "joern-cli-macos-x86_64.zip": "ca5f71b177835c21d8d150524757571cffd38fd210261cfb84e4ce1f4805a063ad062d072ed08bea1ca89f9bd5a45a757fb2bfb274b18ad8718ad37eec6f1288",
+    "joern-cli-windows-arm64.zip": "c1ae4d6d8686f4786a617f101c36053ed0ea4e671b82fd90779dc45ae7278fb8d086c1c4229de4039086b2cb840100abefa8c5b3085e24d41145d9b1c912bb63",
+    "joern-cli-windows-x86_64.zip": "46b7c80055b959c468240a1e57e2fb23a1aa90f0f8b0336ab4676ea58654e7be0bec3e7b09a6266a8c2aafc28d501978e33c208b9c69095dca540a062e31d320",
+}
+
+_OS_NAMES = {"Darwin": "macos", "Linux": "linux", "Windows": "windows"}
+_ARCH_NAMES = {
+    "arm64": "arm64", "aarch64": "arm64",
+    "x86_64": "x86_64", "amd64": "x86_64", "AMD64": "x86_64",
+}
+
+
+def joern_zip_name() -> str:
+    """
+    The name of the Joern release asset matching the current platform, e.g. `joern-cli-macos-arm64.zip`.
+    """
+    system = platform.system()
+    machine = platform.machine()
+    os_name = _OS_NAMES.get(system)
+    arch_name = _ARCH_NAMES.get(machine)
+    if os_name is None or arch_name is None:
+        raise Exception(
+            f"Joern {JOERN_VERSION} publishes no release for this platform ({system} {machine}). "
+            f"Supported platforms: {sorted(JOERN_ZIP_HASHES)}"
+        )
+
+    zip_name = f"joern-cli-{os_name}-{arch_name}.zip"
+    if zip_name not in JOERN_ZIP_HASHES:
+        raise Exception(f"No known Joern release asset {zip_name} for Joern {JOERN_VERSION}")
+
+    return zip_name
+
 # must be imported after defining project wide constants
 from .client import JoernClient
 from .server import JoernServer
@@ -43,7 +82,8 @@ def _download_and_save_joern_zip(save_location: Path, verify=True) -> Path:
 
     ssl._create_default_https_context = ssl._create_unverified_context
 
-    url = f"https://github.com/joernio/joern/releases/download/{JOERN_VERSION}/joern-cli.zip"
+    zip_name = joern_zip_name()
+    url = f"https://github.com/joernio/joern/releases/download/{JOERN_VERSION}/{zip_name}"
     with urllib.request.urlopen(url) as response:
         total_size = response.length
         if response.status != 200:
@@ -63,10 +103,22 @@ def _download_and_save_joern_zip(save_location: Path, verify=True) -> Path:
 
         # hash for extra security
         download_hash = hasher.hexdigest()
-        if verify and download_hash != JOERN_ZIP_HASH:
-            raise Exception(f"Joern files corrupted in download: {download_hash} != {JOERN_ZIP_HASH}")
+        expected_hash = JOERN_ZIP_HASHES[zip_name]
+        if verify and download_hash != expected_hash:
+            raise Exception(f"Joern files corrupted in download: {download_hash} != {expected_hash}")
 
     return save_location
+
+
+def installed_joern_version() -> str | None:
+    """
+    The version of the Joern backend currently installed on this system, or None when there is none.
+    """
+    jar_prefix, jar_suffix = "io.joern.joern-cli-", ".jar"
+    for jar in (JOERN_BIN_DIR_PATH / "lib").glob(f"{jar_prefix}*{jar_suffix}"):
+        return "v" + jar.name[len(jar_prefix):-len(jar_suffix)]
+
+    return None
 
 
 def _download_joern():
@@ -77,7 +129,7 @@ def _download_joern():
     # download joern
     if not JOERN_BIN_DIR_PATH.parent.exists():
         os.mkdir(JOERN_BIN_DIR_PATH.parent)
-    joern_zip_file = _download_and_save_joern_zip(JOERN_BIN_DIR_PATH.parent / "joern-cli.zip", verify=True)
+    joern_zip_file = _download_and_save_joern_zip(JOERN_BIN_DIR_PATH.parent / joern_zip_name(), verify=True)
     # unzip joern
     subprocess.run(["unzip", str(joern_zip_file)], cwd=str(JOERN_BIN_DIR_PATH.parent), capture_output=True, check=True)
     # remove zip file
@@ -87,8 +139,20 @@ def _download_joern():
         raise Exception("Failed to download Joern!")
 
 
-if not JOERN_BIN_DIR_PATH.exists():
-    _l.info(f"Joern binaries are not installed on your system, downloading them now...")
+_installed_version = installed_joern_version()
+if _installed_version != JOERN_VERSION:
+    if _installed_version is None:
+        _l.info(f"Joern binaries are not installed on your system, downloading them now...")
+    else:
+        # PyJoern parses the graphs Joern exports, and that format changes between Joern releases, so an
+        # unsupported backend has to go rather than be parsed with the wrong expectations.
+        _l.info(
+            f"Installed Joern {_installed_version} is not the backend PyJoern supports ({JOERN_VERSION}), "
+            f"replacing it now..."
+        )
+        shutil.rmtree(JOERN_BIN_DIR_PATH)
+
     _download_joern()
-    if not JOERN_BIN_DIR_PATH.exists():
-        raise Exception("Failed to download Joern on startup!")
+    _installed_version = installed_joern_version()
+    if _installed_version != JOERN_VERSION:
+        raise Exception(f"Failed to install Joern {JOERN_VERSION} on startup, got {_installed_version}!")
